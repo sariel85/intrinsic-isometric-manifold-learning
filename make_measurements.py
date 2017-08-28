@@ -11,7 +11,7 @@ n_plot_points = 5000
 noise_variance = 0.00**2
 
 #intrinsic_process_file_name = 'intrinsic_process.npy'
-sim_dir_name_int = "2D Unit Square Punctured by Cross - Bursts"
+sim_dir_name_int = "2D Apartment New - Array"
 
 if not(os.path.isdir(sim_dir_name_int)):
     assert False

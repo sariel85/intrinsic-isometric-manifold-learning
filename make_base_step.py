@@ -10,13 +10,13 @@ import os
 from observation_modes import *
 
 
-sim_dir_name = "2D Unit Square Punctured by Cross"
+sim_dir_name = "2D Apartment to Print"
 
-process_mode = "Bursts"
+process_mode = "Array"
 
 if process_mode == "Array":
     n_points_used = 1000000
-    intrinsic_variance = 0.00001 ** 2
+    intrinsic_variance = 0.15 ** 2
     n_observations_per_cluster = 2
 elif process_mode == "Bursts":
     n_points_used = 1000000

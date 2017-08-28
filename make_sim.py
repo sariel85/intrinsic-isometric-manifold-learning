@@ -52,7 +52,7 @@ cross_width = 0.2
 bounding_shape = BoundingShape(vertices=[(numpy.cos(2*numpy.pi/n_legs*x)*r, numpy.sin(2*numpy.pi/n_legs*x)*r) for x in range(0, n_legs+1)], hole=[(-cross_size, cross_width), (-cross_width, cross_width), (-cross_width, cross_size), (-cross_width, cross_size), (cross_width, cross_size), (cross_width, cross_width), (cross_size, cross_width), (cross_size, -cross_width), (cross_width, -cross_width), (cross_width, -cross_size), (-cross_width, -cross_size), (-cross_width, -cross_width), (-cross_size, -cross_width)])
 '''
 
-
+'''
 sim_dir_name = "2D Unit Square Punctured by Cross"
 process_mode = "Static"
 n_points_simulated = 1500
@@ -64,7 +64,7 @@ subsample_factor = 10
 cross_size = 0.5
 cross_width = 0.2
 bounding_shape = BoundingShape(vertices=[(-1, -1), (1, -1), (1, 1), (-1, 1)], hole=[(-cross_size, cross_width), (-cross_width, cross_width), (-cross_width, cross_size), (-cross_width, cross_size), (cross_width, cross_size), (cross_width, cross_width), (cross_size, cross_width), (cross_size, -cross_width), (cross_width, -cross_width), (cross_width, -cross_size), (-cross_width, -cross_size), (-cross_width, -cross_width), (-cross_size, -cross_width)])
-
+'''
 
 
 '''
@@ -120,19 +120,13 @@ subsample_factor = 10
 bounding_shape = BoundingShape(vertices_in=[(0, 0), (0.4, 0), (0.4, 0.3), (0.7, 0.3), (0.7, 0), (1, 0), (1, 1), (0.5, 1), (0.5, 0.7), (0.2, 0.7), (0.2, 1), (0, 1)])
 '''
 
-'''
 sim_dir_name = "2D Apartment to Print"
-process_mode = "Dynamic"
-n_points_simulated = 5000
-intrinsic_variance = 0.065**2
-#bounding_shape = BoundingShape(vertices=[(2.4, 0), (2.4, 1.13), (0, 1.13), (0, 3.15), (0, 6), (3, 6), (3, 4.2), (4.2, 4.2), (4.2, 7), (7.5, 7), (7.5, 6), (8.5, 6), (8.5, 8.5), (13, 8.5), (13, 3), (11, 3), (11, 2.5), (13,2.5), (13,0), (9 ,0), (9 ,2.5), (9.5 ,2.5), (9.5 ,2.5),  (9.5, 3), (8.5, 4), (7.5, 4), (7.5, 0)])
-#bounding_shape = BoundingShape(vertices=[(2.4, 0), (2.4, 1.13), (0, 1.13), (0, 3.15), (0, 6), (3, 6), (3, 4.2), (4.2, 4.2), (4.2, 7), (7.5, 7), (7.5, 6), (8.5, 6), (8.5, 8.5), (13, 8.5), (13, 3), (11, 3), (11, 2.5), (13,2.5), (13,0), (9 ,0), (9 ,2.5), (9.5 ,2.5), (9.5 ,2.5),  (9.5, 3), (8.5, 4), (7.5, 4), (7.5, 0)])
+process_mode = "Static"
+n_points_simulated = 10000
 bounding_shape = BoundingShape(vertices=[(2.6, 0.2), (2.6, 1.33), (0.2, 1.33), (0.2, 3.25), (0.93, 3.25), (0.93, 5.11), (1.69, 5.11), (1.69, 4.87), (2.8, 4.87), (2.8, 4), (4.37, 4), (4.37, 6.3), (7.28, 6.3), (7.28, 5.82), (8.69, 5.82), (8.69, 8.25), (9.54, 8.25), (9.54, 4.65), (12.8, 4.65), (12.8, 3.18), (10.65, 3.18), (10.65, 2.3), (11.8, 2.3), (11.8, 0.2), (9.17, 0.2), (9.17, 2.3), (9.75, 2.3),  (9.75, 3.63), (8.52, 4.25), (7.28, 4.25), (7.28, 1.63), (4.69, 1.63), (4.69, 0.2)])
 #added_dim_limits = numpy.asarray([[0.5, 2.5]]).T
 added_dim_limits = None
 subsample_factor = 10
-boundary_threshold = 0.2
-'''
 
 
 '''

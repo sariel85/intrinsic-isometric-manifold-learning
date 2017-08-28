@@ -9,7 +9,7 @@ import os
 import itertools
 
 ###Settings#############################################################################################################
-net_flag = True
+net_flag = False
 embed_flag = True
 
 param_w = [0.0001]
@@ -19,7 +19,8 @@ param_nodes = [50]
 
 param_list = list(itertools.product(param_w, param_nodes))
 
-sim_dir_name = "2D Unit Square Punctured by Cross - Bursts - Severed Sphere"
+#sim_dir_name = "2D Unit Square Punctured by Cross - Bursts - Severed Sphere"
+sim_dir_name = "2D Apartment - Array - Color"
 
 if not(os.path.isdir(sim_dir_name)):
     assert False
@@ -28,14 +29,14 @@ process_mode = sim_dir_name.split(" - ")[1]
 if (process_mode != "Array") and (process_mode != "Bursts") and (process_mode != "Diffusion"):
     assert False
 
-n_points_used_for_dynamics_true = 1500
-n_obs_used_for_sensor_array = 1500
-n_points_used_for_dynamics = 1500
-n_points_used_for_clusters = 1500
-n_points_used_for_clusters_2 = 1500
+n_points_used_for_dynamics_true = 4000
+n_obs_used_for_sensor_array = 4000
+n_points_used_for_dynamics = 4000
+n_points_used_for_clusters = 4000
+n_points_used_for_clusters_2 = 500
 
 n_obs_used_in_cluster = 2000
-n_dim_used = 8
+n_dim_used = 5
 
 n_points_used_for_drift_plots = 300
 n_points_used_for_metric_plots = 300
@@ -43,11 +44,11 @@ n_points_used_for_metric_plots = 300
 n_clusters_isometric_mapping = 1
 size_patch_start = n_points_used_for_clusters_2
 size_patch_step = 400
-n_mds_iterations = 200
+n_mds_iterations = 100
 n_neighbors_cov_dense = 500
 n_neighbors_cov = 5
-n_neighbors_mds_1 = 30
-n_neighbors_mds_2 = 30
+n_neighbors_mds_1 = 10
+n_neighbors_mds_2 = 10
 mds_stop_threshold = 1e-9
 n_net_initializations = 1
 dtype = numpy.float64
@@ -64,10 +65,11 @@ noisy_sensor_measured_total = numpy.loadtxt(sim_dir + '/' + 'observed_states_noi
 if noisy_sensor_measured_total.shape[0] > noisy_sensor_measured_total.shape[1]:
     noisy_sensor_measured_total = noisy_sensor_measured_total.T
 intrinsic_variance = numpy.load(sim_dir + '/' + 'intrinsic_variance.npy').astype(dtype=dtype)
-noise_variance = numpy.load(sim_dir + '/' + 'noise_variance.npy').astype(dtype=dtype)
-azi = numpy.load(sim_dir + '/' + 'azi.npy').astype(dtype=dtype)
-el = numpy.load(sim_dir + '/' + 'el.npy').astype(dtype=dtype)
-
+#noise_variance = numpy.load(sim_dir + '/' + 'noise_variance.npy').astype(dtype=dtype)
+#azi = numpy.load(sim_dir + '/' + 'azi.npy').astype(dtype=dtype)
+azi = 0
+#el = numpy.load(sim_dir + '/' + 'el.npy').astype(dtype=dtype)
+el = 0
 if process_mode == "Array":
     sensor_array_matrix_dense = numpy.load(sim_dir + '/' + 'sensor_array_matrix.npy').astype(dtype=dtype)
     n_obs_in_sensor_array = sensor_array_matrix_dense.shape[1]
@@ -218,10 +220,10 @@ if net_flag:
     # print_drift(noisy_sensor_base_clusters[:n_dim_used, points_used_for_drift_plots_indexes], drift_local_dense.T[:, points_used_for_drift_plots_indexes], titleStr="Exact drift")
     # print_drift(noisy_sensor_base_clusters[:, points_used_for_drift_plots_indexes], drift_local.T[:, points_used_for_drift_plots_indexes], titleStr="Locally estimated drift")
 
-    if noise_variance > 0:
-        est_noise_variance_local = noise_variance
-    else:
-        est_noise_variance_local = numpy.sqrt(est_noise_variance_local*10)
+    #if noise_variance > 0:
+    #    est_noise_variance_local = noise_variance
+    #else:
+    est_noise_variance_local = numpy.sqrt(est_noise_variance_local*10)
 
 
     cross_validation_runs = 1

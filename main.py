@@ -10,7 +10,9 @@ import itertools
 
 ###Settings#############################################################################################################
 net_flag = False
-embed_flag = True
+embed_flag = False
+dense_flag = False
+check_other_ml_flag = False
 
 param_w = [0.0001]
 param_nodes = [50]
@@ -20,7 +22,7 @@ param_nodes = [50]
 param_list = list(itertools.product(param_w, param_nodes))
 
 #sim_dir_name = "2D Unit Square Punctured by Cross - Bursts - Severed Sphere"
-sim_dir_name = "2D Apartment - Array - Color"
+sim_dir_name = "2D Apartment to Print - Array - Depth"
 
 if not(os.path.isdir(sim_dir_name)):
     assert False
@@ -29,13 +31,13 @@ process_mode = sim_dir_name.split(" - ")[1]
 if (process_mode != "Array") and (process_mode != "Bursts") and (process_mode != "Diffusion"):
     assert False
 
-n_points_used_for_dynamics_true = 4000
-n_obs_used_for_sensor_array = 4000
-n_points_used_for_dynamics = 4000
-n_points_used_for_clusters = 4000
-n_points_used_for_clusters_2 = 500
+n_points_used_for_dynamics_true = 10000
+n_obs_used_for_sensor_array = 10000
+n_points_used_for_dynamics = 10000
+n_points_used_for_clusters = 10000
+n_points_used_for_clusters_2 = 2000
 
-n_obs_used_in_cluster = 2000
+n_obs_used_in_cluster = 20
 n_dim_used = 5
 
 n_points_used_for_drift_plots = 300
@@ -44,7 +46,7 @@ n_points_used_for_metric_plots = 300
 n_clusters_isometric_mapping = 1
 size_patch_start = n_points_used_for_clusters_2
 size_patch_step = 400
-n_mds_iterations = 100
+n_mds_iterations = 500
 n_neighbors_cov_dense = 500
 n_neighbors_cov = 5
 n_neighbors_mds_1 = 10
@@ -58,7 +60,7 @@ cov_iter_factor = 800
 #Load files
 ########################################################################################################################
 sim_dir = './' + sim_dir_name
-intrinsic_process_total = numpy.loadtxt(sim_dir + '/' + 'intrinsic_states.txt', delimiter=',', dtype=dtype)
+intrinsic_process_total = numpy.loadtxt(sim_dir + '/' + 'intrinsic_process_to_measure.txt', delimiter=',', dtype=dtype)
 if intrinsic_process_total.shape[0] > intrinsic_process_total.shape[1]:
     intrinsic_process_total = intrinsic_process_total.T
 noisy_sensor_measured_total = numpy.loadtxt(sim_dir + '/' + 'observed_states_noisy.txt', delimiter=',', dtype=dtype)
@@ -170,7 +172,7 @@ if False:
         plt.show(block=False)
 
 
-if False:
+if check_other_ml_flag:
     test_ml(noisy_sensor_base_clusters, intrinsic_process_base_clusters, n_neighbors=n_neighbors_mds_1,
             n_components=dim_intrinsic, color=color_map_clusters)
 
@@ -322,11 +324,11 @@ if net_flag:
             rand_num = numpy.random.randint(1000)
             numpy.save(cross_dir + 'log_' + str(rand_num) + '.npy', logs.T)
 
-
 dist_true = scipy.spatial.distance.cdist(intrinsic_process_base_clusters.T, intrinsic_process_base_clusters.T)
 dist_observed = scipy.spatial.distance.cdist(noisy_sensor_base_clusters.T, noisy_sensor_base_clusters.T)
 dist_local = numpy.sqrt(calc_dist(noisy_sensor_base_clusters[:n_dim_used, :], metric_list_local))
-dist_local_dense = numpy.sqrt(calc_dist(noisy_sensor_base_clusters[:n_dim_used, :], metric_list_local_dense))
+if dense_flag:
+    dist_local_dense = numpy.sqrt(calc_dist(noisy_sensor_base_clusters[:n_dim_used, :], metric_list_local_dense))
 
 if net_flag:
     dist_net = numpy.sqrt(calc_dist(noisy_sensor_base_clusters, metric_list_net))
@@ -335,35 +337,43 @@ if net_flag:
 dist_trimmed_true = trim_distances(dist_true, n_neighbors=n_neighbors_mds_1)
 dist_trimmed_observed = trim_distances(dist_observed, n_neighbors=n_neighbors_mds_1)
 dist_trimmed_local = trim_distances(dist_local, dist_observed, n_neighbors=n_neighbors_mds_1)
-dist_trimmed_local_dense = trim_distances(dist_local_dense, dist_observed, n_neighbors=n_neighbors_mds_1)
+if dense_flag:
+    dist_trimmed_local_dense = trim_distances(dist_local_dense, dist_observed, n_neighbors=n_neighbors_mds_1)
 
 if net_flag:
     dist_trimmed_net = trim_distances(dist_net, dist_observed, n_neighbors=n_neighbors_mds_1)
-
 
 #Geodesicly complete distances
 dist_geo_true = scipy.sparse.csgraph.shortest_path(dist_trimmed_true, directed=False)
 dist_geo_observed = scipy.sparse.csgraph.shortest_path(dist_trimmed_observed, directed=False)
 dist_geo_local = scipy.sparse.csgraph.shortest_path(dist_trimmed_local, directed=False)
-dist_geo_local_dense = scipy.sparse.csgraph.shortest_path(dist_trimmed_local_dense, directed=False)
+if dense_flag:
+    dist_geo_local_dense = scipy.sparse.csgraph.shortest_path(dist_trimmed_local_dense, directed=False)
 if net_flag:
     dist_geo_net = scipy.sparse.csgraph.shortest_path(dist_trimmed_net, directed=False)
-
 
 n_distances_plotted = 10000
 
 dist_scatter_plot(dist_true, 'True intrinsic Euclidean distances', dist_geo_true, 'True intrinsic Geodesic distances', 'True intrinsic Euclidean vs geodesic distances', n_dist=n_distances_plotted, flag=True)
 plt.savefig("plot_temp/true_geodesic_vs_intrinsic.png", bbox_inches='tight')
 
-dist_scatter_plot(dist_true, 'True intrinsic Euclidean distances', dist_local_dense, 'Approximated intrinsic Euclidean distances', 'Dense intrinsic distance approx', n_dist=n_distances_plotted, flag=True)
-plt.savefig("plot_temp/dist_local_dense.png", bbox_inches='tight')
+if dense_flag:
+    dist_scatter_plot(dist_true, 'True intrinsic Euclidean distances', dist_local_dense, 'Approximated intrinsic Euclidean distances', 'Dense intrinsic distance approx', n_dist=n_distances_plotted, flag=True)
+    plt.savefig("plot_temp/dist_local_dense.png", bbox_inches='tight')
 
-dist_scatter_plot(dist_true, 'True intrinsic Euclidean distances', dist_trimmed_local_dense, 'Approximated intrinsic Euclidean distances', 'Dense intrinsic distance approx - KNN', n_dist=n_distances_plotted, flag=True)
-plt.savefig("plot_temp/dist_local_dense_knn.png", bbox_inches='tight')
+if dense_flag:
+    dist_scatter_plot(dist_true, 'True intrinsic Euclidean distances', dist_trimmed_local_dense, 'Approximated intrinsic Euclidean distances', 'Dense intrinsic distance approx - KNN', n_dist=n_distances_plotted, flag=True)
+    plt.savefig("plot_temp/dist_local_dense_knn.png", bbox_inches='tight')
 
-dist_scatter_plot(dist_geo_true, 'True intrinsic Geodesic distances', dist_geo_local_dense, 'Approximated intrinsic Geodesic distances', 'Dense Geodesic distance approx', n_dist=n_distances_plotted, flag=True)
-plt.savefig("plot_temp/dist_geo_local_dense.png", bbox_inches='tight')
+#Bad frames
+diffmat = (dist_true - dist_trimmed_local)*dist_trimmed_local
+bad_ind = numpy.where(diffmat>0.5)
+intrinsic_process_base_clusters[:, bad_ind[0][:]]
+intrinsic_process_base_clusters[:, bad_ind[1][:]]
 
+if dense_flag:
+    dist_scatter_plot(dist_geo_true, 'True intrinsic Geodesic distances', dist_geo_local_dense, 'Approximated intrinsic Geodesic distances', 'Dense Geodesic distance approx', n_dist=n_distances_plotted, flag=True)
+    plt.savefig("plot_temp/dist_geo_local_dense.png", bbox_inches='tight')
 
 dist_scatter_plot(dist_true, 'True intrinsic Euclidean distances', dist_local, 'Approximated intrinsic Euclidean distances', 'Sparse intrinsic distance approx', n_dist=n_distances_plotted, flag=True)
 plt.savefig("plot_temp/dist_local.png", bbox_inches='tight')
@@ -385,7 +395,7 @@ if net_flag:
     plt.savefig("plot_temp/dist_geo_net.png", bbox_inches='tight')
 
 
-# Sub-sampling clusters for Kernel method
+# Sub-sampling clusters for kernel method
 n_points_used_for_clusters_2 = min(n_points_used_for_clusters, n_points_used_for_clusters_2)
 points_used_for_clusters_indexes_2 = numpy.random.choice(n_points_used_for_clusters, size=n_points_used_for_clusters_2, replace=False)
 
@@ -396,7 +406,8 @@ color_map_clusters_2 = color_map_clusters[points_used_for_clusters_indexes_2, :]
 dist_2_true = dist_true[points_used_for_clusters_indexes_2, :][:, points_used_for_clusters_indexes_2]
 dist_2_observed = dist_observed[points_used_for_clusters_indexes_2, :][:, points_used_for_clusters_indexes_2]
 dist_2_local = dist_local[points_used_for_clusters_indexes_2, :][:, points_used_for_clusters_indexes_2]
-dist_2_local_dense = dist_local_dense[points_used_for_clusters_indexes_2, :][:, points_used_for_clusters_indexes_2]
+if dense_flag:
+    dist_2_local_dense = dist_local_dense[points_used_for_clusters_indexes_2, :][:, points_used_for_clusters_indexes_2]
 
 if net_flag:
     dist_2_net = dist_net[points_used_for_clusters_indexes_2, :][:, points_used_for_clusters_indexes_2]
@@ -404,14 +415,16 @@ if net_flag:
 dist_geo_2_true = dist_geo_true[points_used_for_clusters_indexes_2, :][:, points_used_for_clusters_indexes_2]
 dist_geo_2_observed = dist_geo_observed[points_used_for_clusters_indexes_2, :][:, points_used_for_clusters_indexes_2]
 dist_geo_2_local = dist_geo_local[points_used_for_clusters_indexes_2, :][:, points_used_for_clusters_indexes_2]
-dist_geo_2_local_dense = dist_geo_local_dense[points_used_for_clusters_indexes_2, :][:, points_used_for_clusters_indexes_2]
+if dense_flag:
+    dist_geo_2_local_dense = dist_geo_local_dense[points_used_for_clusters_indexes_2, :][:, points_used_for_clusters_indexes_2]
 
 if net_flag:
     dist_geo_2_net = dist_geo_net[points_used_for_clusters_indexes_2, :][:, points_used_for_clusters_indexes_2]
 
 dist_trimmed_2_observed = trim_distances(dist_2_observed, dist_geo_2_observed, n_neighbors=n_neighbors_mds_2)
 dist_trimmed_2_local = trim_distances(dist_geo_2_local, dist_geo_2_local, n_neighbors=n_neighbors_mds_2)
-dist_trimmed_2_local_dense = trim_distances(dist_geo_2_local_dense, dist_geo_2_local_dense, n_neighbors=n_neighbors_mds_2)
+if dense_flag:
+    dist_trimmed_2_local_dense = trim_distances(dist_geo_2_local_dense, dist_geo_2_local_dense, n_neighbors=n_neighbors_mds_2)
 dist_trimmed_2_true = trim_distances(dist_geo_2_true, dist_geo_2_true, n_neighbors=n_neighbors_mds_2)
 
 if net_flag:
@@ -421,13 +434,14 @@ if embed_flag:
     mds = manifold.MDS(n_components=dim_intrinsic, max_iter=n_mds_iterations, eps=mds_stop_threshold, dissimilarity="precomputed", n_jobs=1, n_init=1)
     embedding_standard_isomap = mds.fit(dist_geo_2_observed, dist_2_true).embedding_.T
 
-    mds = manifold.MDS(n_components=dim_intrinsic, max_iter=n_mds_iterations, eps=mds_stop_threshold, dissimilarity="precomputed", n_jobs=1, n_init=1)
-    embedding_intrinsic_isomap_dense = mds.fit(dist_geo_2_local_dense, dist_2_true).embedding_.T
-    embedding_intrinsic_isometric_dense = intrinsic_isometric_mapping(approx_intrinsic_geo_dists=dist_geo_2_local_dense, approx_intrinsic_euc_dists=dist_2_local_dense,  approx_intrinsic_euc_dists_trimmed=dist_trimmed_2_local_dense, true_intrinsic_euc_dists=dist_2_true, intrinsic_points=intrinsic_process_clusters_2, dim_intrinsic=dim_intrinsic, n_mds_iters=n_mds_iterations, mds_stop_threshold=mds_stop_threshold, n_clusters=n_clusters_isometric_mapping, size_patch_start=size_patch_start, size_patch_step=size_patch_step)
+    if dense_flag:
+        mds = manifold.MDS(n_components=dim_intrinsic, max_iter=n_mds_iterations, eps=mds_stop_threshold, dissimilarity="precomputed", n_jobs=1, n_init=1)
+        embedding_intrinsic_isomap_dense = mds.fit(dist_geo_2_local_dense, dist_2_true).embedding_.T
+        embedding_intrinsic_isometric_dense = intrinsic_isometric_mapping(approx_intrinsic_geo_dists=dist_geo_2_local_dense, approx_intrinsic_euc_dists=dist_2_local_dense, approx_intrinsic_euc_dists_trimmed=dist_trimmed_2_local_dense, true_intrinsic_euc_dists=dist_2_true, intrinsic_points=intrinsic_process_clusters_2, dim_intrinsic=dim_intrinsic, n_mds_iters=n_mds_iterations, mds_stop_threshold=mds_stop_threshold, n_clusters=n_clusters_isometric_mapping, size_patch_start=size_patch_start, size_patch_step=size_patch_step)
 
     mds = manifold.MDS(n_components=dim_intrinsic, max_iter=n_mds_iterations, eps=mds_stop_threshold, dissimilarity="precomputed", n_jobs=1, n_init=1)
     embedding_intrinsic_isomap = mds.fit(dist_geo_2_local, dist_2_true).embedding_.T
-    embedding_intrinsic_isometric = intrinsic_isometric_mapping(approx_intrinsic_geo_dists=dist_geo_2_local, approx_intrinsic_euc_dists=dist_2_local,  approx_intrinsic_euc_dists_trimmed=dist_trimmed_2_local, true_intrinsic_euc_dists=dist_2_true, intrinsic_points=intrinsic_process_clusters_2, dim_intrinsic=dim_intrinsic, n_mds_iters=n_mds_iterations, mds_stop_threshold=mds_stop_threshold, n_clusters=n_clusters_isometric_mapping, size_patch_start=size_patch_start, size_patch_step=size_patch_step)
+    embedding_intrinsic_isometric = intrinsic_isometric_mapping(approx_intrinsic_geo_dists=dist_geo_2_local, approx_intrinsic_euc_dists=dist_2_local, approx_intrinsic_euc_dists_trimmed=dist_trimmed_2_local, true_intrinsic_euc_dists=dist_2_true, intrinsic_points=intrinsic_process_clusters_2, dim_intrinsic=dim_intrinsic, n_mds_iters=n_mds_iterations, mds_stop_threshold=mds_stop_threshold, n_clusters=n_clusters_isometric_mapping, size_patch_start=size_patch_start, size_patch_step=size_patch_step)
 
     if net_flag:
         mds = manifold.MDS(n_components=dim_intrinsic, max_iter=n_mds_iterations, eps=mds_stop_threshold, dissimilarity="precomputed", n_jobs=1, n_init=1)
@@ -442,17 +456,19 @@ if embed_flag:
     print('standard_isomap:', stress_normalized)
     plt.savefig("plot_temp/standard_isomap_stress.png", bbox_inches='tight')
 
-    print_process(embedding_intrinsic_isomap_dense, bounding_shape=None, color_map=color_map_clusters_2, titleStr="Intrinsic Isomap Embedding - True metric", align_points=intrinsic_process_clusters_2)
-    plt.savefig("plot_temp/embedding_intrinsic_isomap_local_dense.png", bbox_inches='tight')
-    stress_normalized = embedding_score(intrinsic_process_clusters_2, embedding_intrinsic_isomap_dense, titleStr="Intrinsic Isomap Stress - True metric", n_points=n_points_for_stress_calc)
-    plt.savefig("plot_temp/stress_intrinsic_isomap_local_dense.png", bbox_inches='tight')
-    print('intrinsic_isomap_dense:', stress_normalized)
+    if dense_flag:
+        print_process(embedding_intrinsic_isomap_dense, bounding_shape=None, color_map=color_map_clusters_2, titleStr="Intrinsic Isomap Embedding - True metric", align_points=intrinsic_process_clusters_2)
+        plt.savefig("plot_temp/embedding_intrinsic_isomap_local_dense.png", bbox_inches='tight')
+        stress_normalized = embedding_score(intrinsic_process_clusters_2, embedding_intrinsic_isomap_dense, titleStr="Intrinsic Isomap Stress - True metric", n_points=n_points_for_stress_calc)
+        plt.savefig("plot_temp/stress_intrinsic_isomap_local_dense.png", bbox_inches='tight')
+        print('intrinsic_isomap_dense:', stress_normalized)
 
-    print_process(embedding_intrinsic_isometric_dense, bounding_shape=None, color_map=color_map_clusters_2, titleStr="Intrinsic Isometric Embedding - True metric", align_points=intrinsic_process_clusters_2)
-    plt.savefig("plot_temp/embedding_intrinsic_isometric_local_dense.png", bbox_inches='tight')
-    stress_normalized = embedding_score(intrinsic_process_clusters_2, embedding_intrinsic_isometric_dense, titleStr="Intrinsic Isometric Stress - True metric", n_points=n_points_for_stress_calc)
-    plt.savefig("plot_temp/stress_intrinsic_isometric_local_dense.png", bbox_inches='tight')
-    print('intrinsic_isometric_dense:', stress_normalized)
+        print_process(embedding_intrinsic_isometric_dense, bounding_shape=None, color_map=color_map_clusters_2, titleStr="Intrinsic Isometric Embedding - True metric", align_points=intrinsic_process_clusters_2)
+        plt.savefig("plot_temp/embedding_intrinsic_isometric_local_dense.png", bbox_inches='tight')
+        stress_normalized = embedding_score(intrinsic_process_clusters_2, embedding_intrinsic_isometric_dense, titleStr="Intrinsic Isometric Stress - True metric", n_points=n_points_for_stress_calc)
+        plt.savefig("plot_temp/stress_intrinsic_isometric_local_dense.png", bbox_inches='tight')
+        print('intrinsic_isometric_dense:', stress_normalized)
+
 
     print_process(embedding_intrinsic_isomap, bounding_shape=None, color_map=color_map_clusters_2, titleStr="Intrinsic Isomap Embedding - Local metric", align_points=intrinsic_process_clusters_2)
     plt.savefig("plot_temp/embedding_intrinsic_isomap_local.png", bbox_inches='tight')

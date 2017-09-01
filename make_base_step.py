@@ -16,7 +16,7 @@ process_mode = "Array"
 
 if process_mode == "Array":
     n_points_used = 1000000
-    intrinsic_variance = 0.15 ** 2
+    intrinsic_variance = 0.10 ** 2
     n_observations_per_cluster = 2
 elif process_mode == "Bursts":
     n_points_used = 1000000
@@ -47,8 +47,6 @@ if process_mode == "Array":
     sim_dir_save = './' + sim_dir_name + ' - ' + "Array"
 elif process_mode == "Bursts":
     n_obs_in_cluster = numpy.save(sim_dir_save + '/' + 'n_obs_in_cluster.npy', n_observations_per_cluster)
-
-
 
 intrinsic_process_file_name = 'intrinsic_process.npy'
 intrinsic_variance_file_name = 'intrinsic_variance.npy'

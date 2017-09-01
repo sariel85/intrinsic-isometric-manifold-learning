@@ -9,15 +9,21 @@ from sklearn import preprocessing
 import cv2
 from data_generation import print_process, create_color_map, phase_invariance, print_dynamics, non_int_roll
 
-sim_dir_name = "2D Apartment New - Array"
-sim_dir = './' + sim_dir_name
-video_file = sim_dir + '/' + 'video_input.avi'
+sim_dir_name_video = "2D Apartment to Print - Array - Depth"
+sim_dir_name_int = "2D Apartment to Print - Array"
+sim_dir_name_cluster = "2D Apartment to Print - Static"
+sim_dir_video = './' + sim_dir_name_video
+sim_dir_int = './' + sim_dir_name_int
+sim_dir_cluster = './' + sim_dir_name_cluster
 
-n_components = 50
-n_frames_pca = 3*1000
-smooth_sigma = 3
-smoothing_kernel_size = 6*smooth_sigma+1
-downsample_factor = 4
+save_dir = sim_dir_video
+video_file = sim_dir_name_video + '/' + 'video_input.avi'
+
+n_components = 100
+n_frames_pca = 3*2000
+smooth_sigma = 1
+smoothing_kernel_size = 6*numpy.int(numpy.ceil(smooth_sigma))+1
+downsample_factor = 2
 
 ds_type = 'PCA'
 cap = cv2.VideoCapture(video_file)
@@ -104,7 +110,7 @@ while True and i_frame_pca < n_frames_pca:
         dst = dst[:, frame_width:2*frame_width, :]
         dst = dst[::downsample_factor, :, :][:, ::downsample_factor, :]
 
-        if (i_frame_pca==0):
+        if i_frame_pca == 0:
             plt.figure()
             plt.imshow(cv2.cvtColor(dst, cv2.COLOR_BGR2RGB), interpolation='none')
             plt.title('Smoothed image')
@@ -136,7 +142,6 @@ while True and i_frame_pca < n_frames_pca:
         cv2.CAP_PROP_POS_FRAMES
         break
 
-
 if ds_type == 'PCA':
     pca = PCA(n_components=n_components, whiten=False)
     movie_frames_base = movie_frames_for_pca[::3, :]
@@ -157,9 +162,18 @@ if ds_type == 'PCA':
         cv2.waitKey(1000)
         print("Wait for the header")
 
-    n_frames_per_batch = 500
-    n_batches = round(n_frames/n_frames_per_batch)
-    for i in numpy.arange(round(n_frames/n_frames_per_batch)):
+    n_frames_per_batch = 600
+    n_batches = numpy.floor(n_frames/n_frames_per_batch)
+    movie_pca = numpy.zeros((n_batches*n_frames_per_batch, n_components))
+    intrinsic_process = numpy.load(sim_dir_cluster + '/' + 'intrinsic_process.npy').astype(dtype=numpy.float64).T
+    intrinsic_process_to_measure = numpy.loadtxt(sim_dir_int + '/' + 'intrinsic_process_to_measure.txt', delimiter=',').T
+
+    numpy.savetxt(save_dir + '/' + 'intrinsic_states.txt', intrinsic_process[:, 0:round((n_batches * n_frames_per_batch)/3)],
+                  delimiter=',')
+    numpy.savetxt(save_dir + '/' + 'intrinsic_process_to_measure.txt',
+                  intrinsic_process_to_measure[:, 0:numpy.int(n_batches * n_frames_per_batch)], delimiter=',')
+
+    for i in numpy.arange(numpy.floor(n_frames/n_frames_per_batch)):
         print('%d out of %d' % (i+1, n_batches))
         movie_frames_for_batch = None
         i_frame = 0
@@ -194,7 +208,7 @@ if ds_type == 'PCA':
                 cv2.CAP_PROP_POS_FRAMES
                 break
 
-        movie_pca[i*n_frames_per_batch:(i+1)*n_frames_per_batch, :] = pca.transform(movie_frames_for_batch)
+        movie_pca[numpy.int(i*n_frames_per_batch):numpy.int((i+1)*n_frames_per_batch), :] = pca.transform(movie_frames_for_batch)
 
     #numpy.savetxt(sim_dir + '/' + 'pca_vects.txt', pca_base, delimiter=',')
     #pca_base = numpy.loadtxt(sim_dir + '/' + 'pca_vects.txt', delimiter=',')
@@ -202,15 +216,11 @@ if ds_type == 'PCA':
     #movie_pca = numpy.dot(numpy.linalg.pinv(pca_base.T), (movie_frames-numpy.mean(movie_frames.T, 1)).T)
 
 
-intrinsic_states = numpy.loadtxt(sim_dir + '/' + 'intrinsic_process_to_measure.txt', delimiter=',').T
-
-numpy.savetxt(sim_dir + '/' + 'intrinsic_states.txt', intrinsic_states, delimiter=',')
-
 #color_map = create_color_map(intrinsic_process)
 #print_process(movie_pca, bounding_shape=None, color_map=color_map, titleStr="Feature Space")
 #plt.show(block=False)
 #min_max_scaler = preprocessing.MinMaxScaler(feature_range=(0, 1))
 #sensor_noisy = min_max_scaler.fit_transform(movie_pca.T)
 sensor_noisy = movie_pca.T
-numpy.savetxt(sim_dir + '/' + 'observed_states_noisy.txt', sensor_noisy, delimiter=',')
+numpy.savetxt(save_dir + '/' + 'observed_states_noisy.txt', sensor_noisy, delimiter=',')
 plt.show(block=True)

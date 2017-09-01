@@ -355,7 +355,7 @@ def smacof(similarities, dist_2_true, metric=True, n_components=2, init=None, we
 
     if n_jobs == 1:
         for it in range(n_init):
-            pos, stress, n_iter_,  stress_norm_log, stress_norm_real_log= _smacof_single(
+            pos, stress, n_iter_,  stress_norm_log, stress_norm_real_log = _smacof_single(
                 similarities, dist_2_true, metric=metric,
                 n_components=n_components, init=init, weight=weight,
                 max_iter=max_iter, verbose=verbose,
@@ -491,10 +491,10 @@ class MDS(BaseEstimator):
         weight: symmetric ndarray, shape [n * n], optional, default: None
             weighting matrix of similarities. In default, all weights are 1.
         """
-        self.fit_transform(X, dist_2_true, init=init, weight=weight)
+        self.fit_transform(X, dist_2_true=null, init=init, weight=weight)
         return self
 
-    def fit_transform(self, X, dist_2_true, y=None, init=None, weight=None):
+    def fit_transform(self, X, dist_2_true=None, y=None, init=None, weight=None):
         """
         Fit the data from X, and returns the embedded coordinates
 
